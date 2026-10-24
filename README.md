@@ -46,9 +46,9 @@ Example:
 
 ## Screenshots
 
-![Discussions workspace](docs/image1.png)
+![Validations](docs/image1.png)
 
-![Discussion thread with mentions](docs/image2.png)
+![Validations](docs/image2.png)
 
-![Discussions workspace](docs/image3.png)
+![Block Count Settings](docs/image3.png)
 
