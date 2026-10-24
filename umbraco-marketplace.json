@@ -27,5 +27,20 @@
     "validation",
     "umbraco"
   ],
-  "Screenshots": []
+  "Screenshots": [
+ {
+      "ImageUrl": "https://github.com/farshadudheen/blockcount/main/docs/image1.png",
+      "Caption": "Validation"
+    },
+    {
+      "ImageUrl": "https://github.com/farshadudheen/blockcount/main/docs/image2.png",
+      "Caption": "Validation"
+    },
+    {
+      "ImageUrl": "https://github.com/farshadudheen/blockcount/main/docs/image3.png",
+      "Caption": "Count Settings"
+    }
+
+
+]
 }
