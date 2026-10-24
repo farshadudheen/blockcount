@@ -7,7 +7,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <StaticWebAssetBasePath>App_Plugins/BlockCount</StaticWebAssetBasePath>
     <PackageId>BlockCount</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>BlockCount</Authors>
     <Description>Per-block-type minimum and maximum counts for Umbraco 17 Block List and Block Grid.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

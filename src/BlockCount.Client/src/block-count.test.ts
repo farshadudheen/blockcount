@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     aboveMaximumMessage,
     belowMinimumMessage,
+    blockCountValidationMessage,
     blockGridEditorAlias,
     blockListEditorAlias,
     evaluateBlockCount,
@@ -97,6 +98,34 @@ describe('evaluateBlockCount', () => {
         value.contentData?.push({ key: 'orphan', contentTypeKey: image });
         const issues = evaluateBlockCount(value, [{ contentElementTypeKey: image, max: 1 }], names);
         expect(issues).toEqual([]);
+    });
+});
+
+describe('blockCountValidationMessage', () => {
+    it('returns an empty string when there are no issues', () => {
+        expect(blockCountValidationMessage([])).toBe('');
+    });
+
+    it('escapes block names and joins every issue', () => {
+        const imageName = `Image <Block> & "O'Hare"`;
+        const issues = evaluateBlockCount(
+            blockList([image, rte]),
+            [
+                { contentElementTypeKey: image, max: 0 },
+                { contentElementTypeKey: rte, min: 2 },
+            ],
+            new Map([
+                [image, imageName],
+                [rte, 'RTE Block'],
+            ]),
+        );
+
+        expect(blockCountValidationMessage(issues)).toBe(
+            [
+                'Image &lt;Block&gt; &amp; &quot;O&#39;Hare&quot; allows at most 0 entries. The current count is 1.',
+                'RTE Block requires at least 2 entries. The current count is 1.',
+            ].join('<br>'),
+        );
     });
 });
 

@@ -55,6 +55,19 @@ export function negativeMessage(name: string): string {
     return `The count configuration for ${name} is invalid. Minimum and maximum must be zero or greater.`;
 }
 
+export function blockCountValidationMessage(issues: readonly BlockCountIssue[]): string {
+    return issues.map((issue) => escapeHtml(issue.message)).join('<br>');
+}
+
+function escapeHtml(value: string): string {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 export function evaluateBlockCount(
     value: BlockValue | null | undefined,
     rules: BlockCountRule[],

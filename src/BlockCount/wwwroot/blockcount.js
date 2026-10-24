@@ -1,155 +1,173 @@
-var W = (t) => {
+var I = (t) => {
   throw TypeError(t);
 };
-var A = (t, e, o) => e.has(t) || W("Cannot " + o);
-var c = (t, e, o) => (A(t, e, "read from private field"), o ? o.call(t) : e.get(t)), y = (t, e, o) => e.has(t) ? W("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(t) : e.set(t, o), d = (t, e, o, i) => (A(t, e, "write to private field"), i ? i.call(t, o) : e.set(t, o), o), k = (t, e, o) => (A(t, e, "access private method"), o);
-import { UMB_WORKSPACE_CONDITION_ALIAS as H } from "@umbraco-cms/backoffice/workspace";
-import { UmbControllerBase as J } from "@umbraco-cms/backoffice/class-api";
-import { UMB_DOCUMENT_TYPE_ITEM_REPOSITORY_ALIAS as Q } from "@umbraco-cms/backoffice/document-type";
-import { UMB_PROPERTY_CONTEXT as Z, UMB_PROPERTY_DATASET_CONTEXT as j } from "@umbraco-cms/backoffice/property";
-import { UmbRepositoryItemsManager as tt } from "@umbraco-cms/backoffice/repository";
-import { UMB_VALIDATION_CONTEXT as V } from "@umbraco-cms/backoffice/validation";
-import { css as et, customElement as ot, html as it } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement as nt } from "@umbraco-cms/backoffice/lit-element";
-import { UmbTextStyles as st } from "@umbraco-cms/backoffice/style";
-const R = "Umbraco.BlockList", D = "Umbraco.BlockGrid";
-function O(t) {
+var P = (t, e, o) => e.has(t) || I("Cannot " + o);
+var s = (t, e, o) => (P(t, e, "read from private field"), o ? o.call(t) : e.get(t)), d = (t, e, o) => e.has(t) ? I("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(t) : e.set(t, o), f = (t, e, o, i) => (P(t, e, "write to private field"), i ? i.call(t, o) : e.set(t, o), o), k = (t, e, o) => (P(t, e, "access private method"), o);
+import { UMB_WORKSPACE_CONDITION_ALIAS as J } from "@umbraco-cms/backoffice/workspace";
+import { UmbControllerBase as Q } from "@umbraco-cms/backoffice/class-api";
+import { UMB_DOCUMENT_TYPE_ITEM_REPOSITORY_ALIAS as Z } from "@umbraco-cms/backoffice/document-type";
+import { UMB_PROPERTY_CONTEXT as tt, UMB_PROPERTY_DATASET_CONTEXT as et } from "@umbraco-cms/backoffice/property";
+import { UmbRepositoryItemsManager as ot } from "@umbraco-cms/backoffice/repository";
+import { UMB_VALIDATION_CONTEXT as it } from "@umbraco-cms/backoffice/validation";
+import { css as nt, customElement as rt, html as st } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement as at } from "@umbraco-cms/backoffice/lit-element";
+import { UmbTextStyles as ct } from "@umbraco-cms/backoffice/style";
+const D = "Umbraco.BlockList", N = "Umbraco.BlockGrid";
+function z(t) {
   return t === 1 ? "entry" : "entries";
 }
-function rt(t, e, o) {
-  return `${t} requires at least ${e} ${O(e)}. The current count is ${o}.`;
+function lt(t, e, o) {
+  return `${t} requires at least ${e} ${z(e)}. The current count is ${o}.`;
 }
-function at(t, e, o) {
-  return `${t} allows at most ${e} ${O(e)}. The current count is ${o}.`;
+function ut(t, e, o) {
+  return `${t} allows at most ${e} ${z(e)}. The current count is ${o}.`;
 }
-function ct(t, e, o) {
-  return `${t} must contain exactly ${e} ${O(e)}. The current count is ${o}.`;
+function mt(t, e, o) {
+  return `${t} must contain exactly ${e} ${z(e)}. The current count is ${o}.`;
 }
-function ut(t) {
+function pt(t) {
   return `The count configuration for ${t} is invalid. The minimum must be less than or equal to the maximum.`;
 }
-function N(t) {
+function G(t) {
   return `The count configuration for ${t} is invalid. Minimum and maximum must be zero or greater.`;
 }
-function lt(t, e, o, i) {
-  const n = mt(t, i), s = [], a = /* @__PURE__ */ new Set();
-  for (const u of e) {
-    const r = M(u.contentElementTypeKey);
-    if (!r || a.has(r))
-      continue;
-    a.add(r);
-    const m = (o == null ? void 0 : o.get(r)) || (o == null ? void 0 : o.get(u.contentElementTypeKey)) || "Block", l = S(u.min), p = S(u.max);
-    if (l !== void 0 && l < 0 || p !== void 0 && p < 0) {
-      s.push(_(r, m, "invalidConfiguration", N(m)));
-      continue;
-    }
-    if (l !== void 0 && p !== void 0 && l > p) {
-      s.push(_(r, m, "invalidConfiguration", ut(m)));
-      continue;
-    }
-    if (l === void 0 && p === void 0)
-      continue;
-    const f = n.get(r) ?? 0;
-    if (l !== void 0 && p === l && f !== l) {
-      s.push(_(r, m, "exact", ct(m, l, f)));
-      continue;
-    }
-    l !== void 0 && f < l && s.push(_(r, m, "belowMinimum", rt(m, l, f))), p !== void 0 && f > p && s.push(_(r, m, "aboveMaximum", at(m, p, f)));
-  }
-  return s;
+function ht(t) {
+  return t.map((e) => dt(e.message)).join("<br>");
 }
-function mt(t, e) {
-  const o = /* @__PURE__ */ new Map(), i = /* @__PURE__ */ new Map();
-  for (const s of (t == null ? void 0 : t.contentData) ?? [])
-    !s.key || !s.contentTypeKey || i.set(M(s.key), M(s.contentTypeKey));
-  const n = (t == null ? void 0 : t.layout) ?? {};
-  for (const [s, a] of Object.entries(n)) {
-    if (!Array.isArray(a))
+function dt(t) {
+  return t.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
+function ft(t, e, o, i) {
+  const n = yt(t, i), r = [], c = /* @__PURE__ */ new Set();
+  for (const u of e) {
+    const a = A(u.contentElementTypeKey);
+    if (!a || c.has(a))
       continue;
-    const u = s.toLowerCase(), r = u === D.toLowerCase();
-    !(u === R.toLowerCase()) && !r || e && u !== e.toLowerCase() || G(a, i, o, r);
+    c.add(a);
+    const p = (o == null ? void 0 : o.get(a)) || (o == null ? void 0 : o.get(u.contentElementTypeKey)) || "Block", m = S(u.min), y = S(u.max);
+    if (m !== void 0 && m < 0 || y !== void 0 && y < 0) {
+      r.push(w(a, p, "invalidConfiguration", G(p)));
+      continue;
+    }
+    if (m !== void 0 && y !== void 0 && m > y) {
+      r.push(w(a, p, "invalidConfiguration", pt(p)));
+      continue;
+    }
+    if (m === void 0 && y === void 0)
+      continue;
+    const v = n.get(a) ?? 0;
+    if (m !== void 0 && y === m && v !== m) {
+      r.push(w(a, p, "exact", mt(p, m, v)));
+      continue;
+    }
+    m !== void 0 && v < m && r.push(w(a, p, "belowMinimum", lt(p, m, v))), y !== void 0 && v > y && r.push(w(a, p, "aboveMaximum", ut(p, y, v)));
+  }
+  return r;
+}
+function yt(t, e) {
+  const o = /* @__PURE__ */ new Map(), i = /* @__PURE__ */ new Map();
+  for (const r of (t == null ? void 0 : t.contentData) ?? [])
+    !r.key || !r.contentTypeKey || i.set(A(r.key), A(r.contentTypeKey));
+  const n = (t == null ? void 0 : t.layout) ?? {};
+  for (const [r, c] of Object.entries(n)) {
+    if (!Array.isArray(c))
+      continue;
+    const u = r.toLowerCase(), a = u === N.toLowerCase();
+    !(u === D.toLowerCase()) && !a || e && u !== e.toLowerCase() || q(c, i, o, a);
   }
   return o;
 }
-function G(t, e, o, i) {
+function q(t, e, o, i) {
   var n;
-  for (const s of t) {
-    const a = s.contentKey ? M(s.contentKey) : "", u = a ? e.get(a) : void 0;
+  for (const r of t) {
+    const c = r.contentKey ? A(r.contentKey) : "", u = c ? e.get(c) : void 0;
     if (u && o.set(u, (o.get(u) ?? 0) + 1), !!i)
-      for (const r of s.areas ?? [])
-        (n = r.items) != null && n.length && G(r.items, e, o, i);
+      for (const a of r.areas ?? [])
+        (n = a.items) != null && n.length && q(a.items, e, o, i);
   }
 }
 function S(t) {
   return t ?? void 0;
 }
-function M(t) {
+function A(t) {
   return t.trim().toLowerCase();
 }
-function _(t, e, o, i) {
+function w(t, e, o, i) {
   return { contentElementTypeKey: t, blockName: e, kind: o, message: i };
 }
-const pt = {
-  "Umb.PropertyEditorUi.BlockList": R,
-  "Umb.PropertyEditorUi.BlockGrid": D
+const kt = {
+  "Umb.PropertyEditorUi.BlockList": D,
+  "Umb.PropertyEditorUi.BlockGrid": N
 };
-var w, C, T, v, B, g, E, h, b;
-class yt extends J {
+var _, T, g, B, E, h, b, M, l, Y, K, C;
+class bt extends Q {
   constructor(o) {
     super(o);
-    y(this, h);
-    y(this, w);
-    y(this, C, []);
-    y(this, T);
-    y(this, v);
-    y(this, B, /* @__PURE__ */ new Map());
-    y(this, g, /* @__PURE__ */ new Set());
-    y(this, E, new tt(this, Q));
-    this.consumeContext(V, (i) => {
-      d(this, w, i), k(this, h, b).call(this);
-    }), this.consumeContext(Z, (i) => {
+    d(this, l);
+    d(this, _, []);
+    d(this, T);
+    d(this, g);
+    d(this, B, /* @__PURE__ */ new Map());
+    d(this, E, []);
+    d(this, h);
+    d(this, b);
+    d(this, M, new ot(this, Z));
+    this.consumeContext(tt, (i) => {
       i && (this.observe(
         i.value,
         (n) => {
-          d(this, T, n), k(this, h, b).call(this);
+          f(this, T, n), k(this, l, C).call(this);
         },
         "blockCountValue"
       ), this.observe(
         i.config,
         (n) => {
-          d(this, C, ht(n));
-          const s = c(this, C).map((a) => a.contentElementTypeKey).filter((a) => !!a);
-          c(this, E).setUniques(s), k(this, h, b).call(this);
+          f(this, _, Ct(n));
+          const r = s(this, _).map((c) => c.contentElementTypeKey).filter((c) => !!c);
+          s(this, M).setUniques(r), k(this, l, C).call(this);
         },
         "blockCountConfig"
       ), this.observe(
         i.editorManifest,
         (n) => {
-          d(this, v, n != null && n.alias ? pt[n.alias] : void 0), k(this, h, b).call(this);
+          f(this, g, n != null && n.alias ? kt[n.alias] : void 0), k(this, l, C).call(this);
         },
         "blockCountEditor"
+      ), this.observe(
+        i.editor,
+        (n) => {
+          k(this, l, Y).call(this, n), k(this, l, C).call(this);
+        },
+        "blockCountEditorElement"
       ));
-    }), this.observe(c(this, E).items, (i) => {
-      d(this, B, new Map(i.map((n) => [n.unique.toLowerCase(), n.name || "Block"]))), k(this, h, b).call(this);
+    }), this.observe(s(this, M).items, (i) => {
+      f(this, B, new Map(i.map((n) => [n.unique.toLowerCase(), n.name || "Block"]))), k(this, l, C).call(this);
     });
   }
-}
-w = new WeakMap(), C = new WeakMap(), T = new WeakMap(), v = new WeakMap(), B = new WeakMap(), g = new WeakMap(), E = new WeakMap(), h = new WeakSet(), b = function() {
-  const o = c(this, w);
-  if (!o)
-    return;
-  for (const n of c(this, g))
-    o.messages.removeMessageByKey(n);
-  if (c(this, g).clear(), !c(this, v))
-    return;
-  const i = lt(c(this, T), c(this, C), c(this, B), c(this, v));
-  for (const n of i) {
-    const s = `blockCount:${n.kind}:${n.contentElementTypeKey}`;
-    o.messages.addMessage("custom", "$", n.message, s), c(this, g).add(s);
+  destroy() {
+    k(this, l, K).call(this), super.destroy();
   }
+}
+_ = new WeakMap(), T = new WeakMap(), g = new WeakMap(), B = new WeakMap(), E = new WeakMap(), h = new WeakMap(), b = new WeakMap(), M = new WeakMap(), l = new WeakSet(), Y = function(o) {
+  const i = vt(o) ? o : void 0;
+  s(this, h) !== i && (k(this, l, K).call(this), i && (f(this, h, i), f(this, b, i.addValidator(
+    "customError",
+    () => ht(s(this, E)),
+    () => s(this, E).length > 0
+  ))));
+}, K = function() {
+  s(this, h) && s(this, b) && s(this, h).removeValidator(s(this, b)), f(this, h, void 0), f(this, b, void 0);
+}, C = function() {
+  f(this, E, s(this, g) ? ft(s(this, T), s(this, _), s(this, B), s(this, g)) : []), s(this, h) && s(this, h).pristine === !1 && s(this, h).checkValidity();
 };
-function ht(t) {
-  return ft(t).filter((o) => !!o.contentElementTypeKey).map((o) => {
+function vt(t) {
+  if (!t || typeof t != "object")
+    return !1;
+  const e = t;
+  return typeof e.addValidator == "function" && typeof e.removeValidator == "function" && typeof e.checkValidity == "function";
+}
+function Ct(t) {
+  return _t(t).filter((o) => !!o.contentElementTypeKey).map((o) => {
     var i, n;
     return {
       contentElementTypeKey: o.contentElementTypeKey,
@@ -158,29 +176,29 @@ function ht(t) {
     };
   });
 }
-function ft(t) {
+function _t(t) {
   if (!t || typeof t != "object" || !("getValueByAlias" in t))
     return [];
   const e = t.getValueByAlias("blocks");
   return Array.isArray(e) ? e : [];
 }
-var dt = Object.getOwnPropertyDescriptor, q = (t) => {
+var gt = Object.getOwnPropertyDescriptor, X = (t) => {
   throw TypeError(t);
-}, kt = (t, e, o, i) => {
-  for (var n = i > 1 ? void 0 : i ? dt(e, o) : e, s = t.length - 1, a; s >= 0; s--)
-    (a = t[s]) && (n = a(n) || n);
+}, Et = (t, e, o, i) => {
+  for (var n = i > 1 ? void 0 : i ? gt(e, o) : e, r = t.length - 1, c; r >= 0; r--)
+    (c = t[r]) && (n = c(n) || n);
   return n;
-}, z = (t, e, o) => e.has(t) || q("Cannot " + o), $ = (t, e, o) => (z(t, e, "read from private field"), e.get(t)), K = (t, e, o) => e.has(t) ? q("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(t) : e.set(t, o), bt = (t, e, o, i) => (z(t, e, "write to private field"), e.set(t, o), o), Y = (t, e, o) => (z(t, e, "access private method"), o), x, U, L, X, F;
-let P = class extends nt {
+}, W = (t, e, o) => e.has(t) || X("Cannot " + o), V = (t, e, o) => (W(t, e, "read from private field"), e.get(t)), $ = (t, e, o) => e.has(t) ? X("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(t) : e.set(t, o), wt = (t, e, o, i) => (W(t, e, "write to private field"), e.set(t, o), o), j = (t, e, o) => (W(t, e, "access private method"), o), U, x, L, H, F;
+let O = class extends at {
   constructor() {
-    super(), K(this, L), K(this, x), K(this, U, "blockCount:negative"), this.consumeContext(V, (t) => {
-      bt(this, x, t);
-    }), this.consumeContext(j, (t) => {
-      t && Y(this, L, X).call(this, t);
+    super(), $(this, L), $(this, U), $(this, x, "blockCount:negative"), this.consumeContext(it, (t) => {
+      wt(this, U, t);
+    }), this.consumeContext(et, (t) => {
+      t && j(this, L, H).call(this, t);
     });
   }
   render() {
-    return it`
+    return st`
             <uui-box headline=${this.localize.term("blockCount_amount")}>
                 <umb-property
                     .label=${this.localize.term("blockCount_amount")}
@@ -192,24 +210,24 @@ let P = class extends nt {
         `;
   }
 };
-x = /* @__PURE__ */ new WeakMap();
 U = /* @__PURE__ */ new WeakMap();
+x = /* @__PURE__ */ new WeakMap();
 L = /* @__PURE__ */ new WeakSet();
-X = async function(t) {
+H = async function(t) {
   const e = await t.propertyValueByAlias("blockCount");
-  e && this.observe(e, (o) => Y(this, L, F).call(this, o), "blockCountConfiguration");
+  e && this.observe(e, (o) => j(this, L, F).call(this, o), "blockCountConfiguration");
 };
 F = function(t) {
-  const e = $(this, x);
+  const e = V(this, U);
   if (!e)
     return;
-  e.messages.removeMessageByKey($(this, U));
+  e.messages.removeMessageByKey(V(this, x));
   const o = t == null ? void 0 : t.min, i = t == null ? void 0 : t.max;
-  (o != null && o < 0 || i != null && i < 0) && e.messages.addMessage("custom", "$", N("this block"), $(this, U));
+  (o != null && o < 0 || i != null && i < 0) && e.messages.addMessage("custom", "$", G("this block"), V(this, x));
 };
-P.styles = [
-  st,
-  et`
+O.styles = [
+  ct,
+  nt`
             :host {
                 display: block;
                 margin: var(--uui-size-layout-1);
@@ -221,10 +239,10 @@ P.styles = [
             }
         `
 ];
-P = kt([
-  ot("block-count-workspace-view")
-], P);
-const Ct = "Umb.Workspace.BlockListType", vt = "Umb.Workspace.BlockGridType", gt = [
+O = Et([
+  rt("block-count-workspace-view")
+], O);
+const Tt = "Umb.Workspace.BlockListType", Bt = "Umb.Workspace.BlockGridType", Mt = [
   {
     type: "localization",
     alias: "BlockCount.Localization.En",
@@ -240,18 +258,18 @@ const Ct = "Umb.Workspace.BlockListType", vt = "Umb.Workspace.BlockGridType", gt
       }
     }
   },
-  I("BlockCount.WorkspaceView.BlockListType", Ct),
-  I("BlockCount.WorkspaceView.BlockGridType", vt),
+  R("BlockCount.WorkspaceView.BlockListType", Tt),
+  R("BlockCount.WorkspaceView.BlockGridType", Bt),
   {
     type: "propertyContext",
     alias: "BlockCount.PropertyContext",
     name: "Block Count Property Context",
-    api: yt,
+    api: bt,
     forPropertyEditorUis: ["Umb.PropertyEditorUi.BlockList", "Umb.PropertyEditorUi.BlockGrid"],
     meta: {}
   }
 ];
-function I(t, e) {
+function R(t, e) {
   return {
     type: "workspaceView",
     alias: t,
@@ -265,17 +283,17 @@ function I(t, e) {
     },
     conditions: [
       {
-        alias: H,
+        alias: J,
         match: e
       }
     ]
   };
 }
-const $t = (t, e) => {
-  e.registerMany(gt);
+const Wt = (t, e) => {
+  e.registerMany(Mt);
 };
 export {
-  gt as manifests,
-  $t as onInit
+  Mt as manifests,
+  Wt as onInit
 };
 //# sourceMappingURL=blockcount.js.map
