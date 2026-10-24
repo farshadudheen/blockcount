@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,11 +8,17 @@
     <StaticWebAssetBasePath>App_Plugins/BlockCount</StaticWebAssetBasePath>
     <PackageId>BlockCount</PackageId>
     <Version>1.0.1</Version>
-    <Authors>BlockCount</Authors>
-    <Description>Per-block-type minimum and maximum counts for Umbraco 17 Block List and Block Grid.</Description>
+    <Authors>Farshadudheen k</Authors>
+    <Description>Add powerful validation rules to Umbraco Block List content, helping editors ensure blocks meet your content requirements before publishing.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>umbraco;umbraco-marketplace;block-list;block-grid</PackageTags>
     <IsPackable>true</IsPackable>
+    <Title>BlockCount</Title>
+    <Copyright>Copyright © BlockCount contributors</Copyright>
+    <PackageProjectUrl>https://github.com/farshadudheen/blockcount</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/farshadudheen/blockcount</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\assets\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 

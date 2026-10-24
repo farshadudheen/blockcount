@@ -1,0 +1,31 @@
+
+
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Title": "BlockCount",
+  "Description": "Configure minimum and maximum counts for individual block types in Umbraco Block List and Block Grid properties.",
+  "Category": "Developer Tools",
+  "AlternateCategory": "Editor Tools",
+  "LicenseTypes": [
+    "Free"
+  ],
+  "PackageType": "Package",
+  "DocumentationUrl": "https://github.com/farshadudheen/blockcount/blob/main/README.md",
+  "IssueTrackerUrl": "https://github.com/farshadudheen/blockcount/issues",
+  "LookingForMaintainer": false,
+  "VersionDependencyMode": "Default",
+  "AuthorDetails": {
+    "Name": "Farshadudheen K",
+    "Url": "https://github.com/farshadudheen",
+    "ImageUrl": "https://github.com/farshadudheen.png",
+    "SyncContributorsFromRepository": false
+      },
+  "Tags": [
+    "blockcount",
+    "block-list",
+    "block-grid",
+    "validation",
+    "umbraco"
+  ],
+  "Screenshots": []
+}
