@@ -27,7 +27,7 @@ dotnet pack src/BlockCount/BlockCount.csproj -c Release
 ```
 
 ```xml
-<PackageReference Include="BlockCount" Version="1.0.1" />
+<PackageReference Include="BlockCount" Version="1.17.0" />
 ```
 
 The package is a Razor Class Library. Umbraco discovers `App_Plugins/BlockCount/umbraco-package.json` from the referenced project or package. No composer registration is required in the website.
