@@ -19,6 +19,7 @@
     <RepositoryUrl>https://github.com/farshadudheen/blockcount</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
