@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BlockCount.IntegrationTests/BlockCount.IntegrationTests.csproj" />
+    <Project Path="src/BlockCount.Site/BlockCount.Site.csproj" />
+    <Project Path="src/BlockCount.Tests/BlockCount.Tests.csproj" />
+    <Project Path="src/BlockCount/BlockCount.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>BlockCount</RootNamespace>
+    <AssemblyName>BlockCount</AssemblyName>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <StaticWebAssetBasePath>App_Plugins/BlockCount</StaticWebAssetBasePath>
+    <PackageId>BlockCount</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>BlockCount</Authors>
+    <Description>Per-block-type minimum and maximum counts for Umbraco 17 Block List and Block Grid.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>umbraco;umbraco-marketplace;block-list;block-grid</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="[17.7.1, 18.0.0)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <Target Name="BuildBlockCountClient" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true' AND '$(BlockCountSkipClientBuild)' != 'true'">
+    <PropertyGroup>
+      <BlockCountNodePath Condition="'$(BlockCountNodePath)' == ''">C:\Program Files\nodejs</BlockCountNodePath>
+      <BlockCountNpm Condition="'$(BlockCountNpm)' == '' AND Exists('$(BlockCountNodePath)\npm.cmd')">$(BlockCountNodePath)\npm.cmd</BlockCountNpm>
+      <BlockCountNpm Condition="'$(BlockCountNpm)' == ''">npm</BlockCountNpm>
+      <BlockCountNpmCommand>set "PATH=$(BlockCountNodePath);%25PATH%25" &amp;&amp; "$(BlockCountNpm)"</BlockCountNpmCommand>
+    </PropertyGroup>
+    <Exec Command="$(BlockCountNpmCommand) ci" WorkingDirectory="$(MSBuildThisFileDirectory)..\BlockCount.Client" Condition="!Exists('$(MSBuildThisFileDirectory)..\BlockCount.Client\node_modules')" />
+    <Exec Command="$(BlockCountNpmCommand) run build" WorkingDirectory="$(MSBuildThisFileDirectory)..\BlockCount.Client" />
+  </Target>
+
+</Project>

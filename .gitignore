@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+*.user
+node_modules/
+dist/
+src/BlockCount.Site/umbraco/
+src/BlockCount.Site/umbraco.sqlite.db*
+src/BlockCount.Site/App_Data/
+src/BlockCount.IntegrationTests/umbraco/
+src/BlockCount.IntegrationTests/umbraco.sqlite.db*
+src/BlockCount.IntegrationTests/appsettings-schema*.json
+src/BlockCount.IntegrationTests/umbraco-package-schema.json
+*.sqlite.db
+*.sqlite.db-shm
+*.sqlite.db-wal
+TestResults/

@@ -1,0 +1,14 @@
+{
+    "id": "BlockCount",
+    "name": "BlockCount",
+    "version": "1.0.0",
+    "allowTelemetry": false,
+    "extensions": [
+        {
+            "type": "backofficeEntryPoint",
+            "alias": "BlockCount.EntryPoint",
+            "name": "BlockCount",
+            "js": "/App_Plugins/BlockCount/blockcount.js"
+        }
+    ]
+}
