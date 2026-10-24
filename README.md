@@ -44,18 +44,13 @@ Example:
 | Rich text | 0 | 3 |
 | Video | 1 | 2 |
 
-## Counting rules
+## Screenshots
 
-Counts come from layout items. Each layout item is joined to `contentData` by `contentKey` / `key`, and the block type is `contentTypeKey`. Content entries that are not in the layout are ignored.
+![Discussions workspace](docs/image1.png)
 
-- **Block List:** items in `layout["Umbraco.BlockList"]`.
-- **Block Grid:** items in `layout["Umbraco.BlockGrid"]` and every nested `areas[].items` array, at any depth. Those items share one quota for the property. An Image maximum of 1 means one Image anywhere in that grid, including areas.
-- **Nested block properties:** a Block List or Block Grid property on an element type is a separate property with its own data type. Its items are not added to the parent count. The server validates that nested value against the element property's data type. The same applies to block properties on the settings element.
-- **Culture:** a variant property is checked only for cultures included in the publish. An invariant property is always checked. The `expose` flag does not change the count.
+![Discussion thread with mentions](docs/image2.png)
 
-Draft save is not cancelled on the server, so an incomplete document can be saved. Publish is cancelled. In the backoffice, the property validation messages also keep Save and Publish invalid while the editor is open.
-
-A nested Block List or Block Grid is validated in the backoffice when that nested editor is mounted. A nested editor inside a closed overlay is still validated when the document is published.
+![Discussions workspace](docs/image3.png)
 
 ## Development
 
