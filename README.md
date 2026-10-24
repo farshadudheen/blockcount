@@ -1,16 +1,9 @@
 # BlockCount
 
-Per-block-type minimum and maximum counts for Umbraco 17 Block List and Block Grid.
+Per-block-type minimum and maximum counts for Umbraco Block List and Block Grid.
 
 BlockCount adds a Count tab to each allowed block type. The limits are stored on the data type. The backoffice shows a validation message while the counts are wrong, and the server cancels publish when a document still breaks them.
 
-## Requirements
-
-- .NET 10
-- Umbraco CMS 17.7.1 or later, and earlier than 18
-- Node.js 24 or later, on `PATH`, when building this repository
-
-The NuGet dependency is `[17.7.1, 18.0.0)`. This package does not support Umbraco 18.
 
 ## Install
 
