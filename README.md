@@ -52,18 +52,3 @@ Example:
 
 ![Discussions workspace](docs/image3.png)
 
-## Development
-
-```bash
-dotnet test src/BlockCount.Tests/BlockCount.Tests.csproj
-dotnet test src/BlockCount.IntegrationTests/BlockCount.IntegrationTests.csproj
-dotnet build src/BlockCount.Site/BlockCount.Site.csproj
-```
-
-`src/BlockCount.Site` is an empty Umbraco 17.7.1 site that references the package. Its Development settings install Umbraco unattended with the user `admin@localhost` and password `BlockCount-Site-17`. Start it with the `https` launch profile. The backoffice sign-in rejects plain HTTP.
-
-The client project is built with Vite into `src/BlockCount/wwwroot` before the library compiles. Set `BlockCountSkipClientBuild=true` to skip that step. If Node.js is not installed under `C:\Program Files\nodejs`, set `BlockCountNpm` to `npm` or the full path of `npm.cmd`.
-
-## Out of scope
-
-Rich Text block elements, Single Block, and Umbraco 18 are not implemented. The evaluator takes plain models so a later version can replace the configuration reader and the publishing handler without changing the counting rules.
