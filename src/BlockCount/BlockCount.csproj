@@ -7,7 +7,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <StaticWebAssetBasePath>App_Plugins/BlockCount</StaticWebAssetBasePath>
     <PackageId>BlockCount</PackageId>
-    <Version>1.17.1</Version>
+    <Version>1.17.2</Version>
     <Authors>Farshadudheen k</Authors>
     <Description>Add powerful validation rules to Umbraco Block List content, helping editors ensure blocks meet your content requirements before publishing.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
