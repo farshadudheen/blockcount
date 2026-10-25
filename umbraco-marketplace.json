@@ -29,15 +29,15 @@
   ],
   "Screenshots": [
  {
-      "ImageUrl": "https://github.com/farshadudheen/blockcount/blob/main/docs/image1.png",
+      "ImageUrl": "https://raw.githubusercontent.com/farshadudheen/blockcount/blob/main/docs/image1.png",
       "Caption": "Validation"
     },
     {
-      "ImageUrl": "https://github.com/farshadudheen/blockcount/blob/main/docs/image2.png",
+      "ImageUrl": "https://raw.githubusercontent.com/farshadudheen/blockcount/blob/main/docs/image2.png",
       "Caption": "Validation"
     },
     {
-      "ImageUrl": "https://github.com/farshadudheen/blockcount/blob/main/docs/image3.png",
+      "ImageUrl": "https://raw.githubusercontent.com/farshadudheen/blockcount/blob/main/docs/image3.png",
       "Caption": "Count Settings"
     }
 
