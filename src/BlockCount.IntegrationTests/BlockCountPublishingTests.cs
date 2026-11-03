@@ -3,12 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Core.Models.ContentEditing;
-using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
-using Umbraco.Cms.Core.Services.OperationStatus;
 using Umbraco.Cms.Tests.Common.Testing;
 using Umbraco.Cms.Tests.Integration.Testing;
 
@@ -24,28 +21,23 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
 
     private IDataTypeService DataTypeService => GetRequiredService<IDataTypeService>();
 
-    private IContentEditingService EditingService => GetRequiredService<IContentEditingService>();
+    private ILocalizationService LocalizationService => GetRequiredService<ILocalizationService>();
 
-    private ILanguageService LanguageService => GetRequiredService<ILanguageService>();
-
-    protected override void CustomTestSetup(IUmbracoBuilder builder)
-    {
-        builder.Services.AddTransient<BlockCountContentValidator>();
-        builder.AddNotificationAsyncHandler<ContentPublishingNotification, BlockCountPublishingHandler>();
-    }
+    protected override void CustomTestSetup(IUmbracoBuilder builder) =>
+        new BlockCountComposer().Compose(builder);
 
     [Test]
     public async Task Block_list_publish_rejects_invalid_counts_and_accepts_valid_counts()
     {
         var image = await CreateElementAsync("imageBlock");
         var rte = await CreateElementAsync("rteBlock");
-        var dataType = await CreateBlockDataTypeAsync(BlockEditors.BlockList, "Umb.PropertyEditorUi.BlockList",
+        var dataType = await CreateBlockDataTypeAsync(BlockEditors.BlockList,
         [
             Rule(image, 1, 1),
             Rule(rte, 0, 3),
         ]);
-        var reloaded = await DataTypeService.GetAsync(dataType.Key);
-        var rules = BlockCountConfigurationReader.Read(reloaded!.ConfigurationData);
+        var reloaded = DataTypeService.GetDataType(dataType.Key);
+        var rules = BlockCountConfigurationReader.Read(reloaded!.Configuration);
 
         Assert.That(rules.Select(rule => (rule.ContentElementTypeKey, rule.Min, rule.Max)), Is.EquivalentTo(new[]
         {
@@ -58,7 +50,7 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
         invalid.SetValue("blocks", BlockList((image.Key, 0), (rte.Key, 4)));
         ContentService.Save(invalid, Constants.Security.SuperUserId, null);
 
-        var rejected = ContentService.Publish(invalid, [], Constants.Security.SuperUserId);
+        var rejected = ContentService.SaveAndPublish(invalid, "*", Constants.Security.SuperUserId);
         Assert.That(rejected.Success, Is.False, Describe(rejected));
         Assert.That(rejected.Result, Is.EqualTo(PublishResultType.FailedPublishCancelledByEvent));
         Assert.That(Describe(rejected), Does.Contain("exactly 1").And.Contain("at most 3"));
@@ -66,7 +58,7 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
         var valid = ContentService.Create("Valid list", Constants.System.Root, page.Alias);
         valid.SetValue("blocks", BlockList((image.Key, 1), (rte.Key, 3)));
         ContentService.Save(valid, Constants.Security.SuperUserId, null);
-        var published = ContentService.Publish(valid, [], Constants.Security.SuperUserId);
+        var published = ContentService.SaveAndPublish(valid, "*", Constants.Security.SuperUserId);
         Assert.That(published.Success, Is.True, Describe(published));
     }
 
@@ -74,20 +66,20 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
     public async Task Block_grid_areas_share_one_quota()
     {
         var image = await CreateElementAsync("gridImage");
-        var dataType = await CreateBlockDataTypeAsync(BlockEditors.BlockGrid, "Umb.PropertyEditorUi.BlockGrid", [Rule(image, max: 1)]);
+        var dataType = await CreateBlockDataTypeAsync(BlockEditors.BlockGrid, [Rule(image, max: 1)]);
         var page = await CreatePageAsync("gridPage", dataType);
         var content = ContentService.Create("Grid", Constants.System.Root, page.Alias);
         content.SetValue("blocks", BlockGrid(image.Key, image.Key));
         ContentService.Save(content, Constants.Security.SuperUserId, null);
 
-        var rejected = ContentService.Publish(content, [], Constants.Security.SuperUserId);
+        var rejected = ContentService.SaveAndPublish(content, "*", Constants.Security.SuperUserId);
         Assert.That(rejected.Result, Is.EqualTo(PublishResultType.FailedPublishCancelledByEvent), Describe(rejected));
         Assert.That(Describe(rejected), Does.Contain("at most 1"));
 
         var valid = ContentService.Create("Valid grid", Constants.System.Root, page.Alias);
         valid.SetValue("blocks", BlockGrid(image.Key));
         ContentService.Save(valid, Constants.Security.SuperUserId, null);
-        var published = ContentService.Publish(valid, [], Constants.Security.SuperUserId);
+        var published = ContentService.SaveAndPublish(valid, "*", Constants.Security.SuperUserId);
         Assert.That(published.Success, Is.True, Describe(published));
     }
 
@@ -95,15 +87,15 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
     public async Task Nested_block_properties_are_validated_separately()
     {
         var image = await CreateElementAsync("nestedImage");
-        var slides = await CreateBlockDataTypeAsync(BlockEditors.BlockList, "Umb.PropertyEditorUi.BlockList", [Rule(image, max: 1)]);
+        var slides = await CreateBlockDataTypeAsync(BlockEditors.BlockList, [Rule(image, max: 1)]);
         var card = await CreateElementAsync("card", ("slides", "Slides", slides));
-        var cards = await CreateBlockDataTypeAsync(BlockEditors.BlockList, "Umb.PropertyEditorUi.BlockList", [Rule(card, 1, 1), Rule(image, max: 1)]);
+        var cards = await CreateBlockDataTypeAsync(BlockEditors.BlockList, [Rule(card, 1, 1), Rule(image, max: 1)]);
         var page = await CreatePageAsync("nestedPage", cards);
         var content = ContentService.Create("Nested", Constants.System.Root, page.Alias);
         content.SetValue("blocks", NestedCards(card.Key, image.Key, 3));
         ContentService.Save(content, Constants.Security.SuperUserId, null);
 
-        var rejected = ContentService.Publish(content, [], Constants.Security.SuperUserId);
+        var rejected = ContentService.SaveAndPublish(content, "*", Constants.Security.SuperUserId);
         var description = Describe(rejected);
         Assert.That(rejected.Result, Is.EqualTo(PublishResultType.FailedPublishCancelledByEvent), description);
         Assert.That(description, Does.Contain("Blocks / Card / Slides"));
@@ -112,7 +104,7 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
         var valid = ContentService.Create("Valid nested", Constants.System.Root, page.Alias);
         valid.SetValue("blocks", NestedCards(card.Key, image.Key, 1));
         ContentService.Save(valid, Constants.Security.SuperUserId, null);
-        var published = ContentService.Publish(valid, [], Constants.Security.SuperUserId);
+        var published = ContentService.SaveAndPublish(valid, "*", Constants.Security.SuperUserId);
         Assert.That(published.Success, Is.True, Describe(published));
     }
 
@@ -122,7 +114,7 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
         await EnsureLanguageAsync("en-US", "English (United States)");
         await EnsureLanguageAsync("da-DK", "Danish (Denmark)");
         var image = await CreateElementAsync("cultureImage");
-        var dataType = await CreateBlockDataTypeAsync(BlockEditors.BlockList, "Umb.PropertyEditorUi.BlockList", [Rule(image, max: 1)]);
+        var dataType = await CreateBlockDataTypeAsync(BlockEditors.BlockList, [Rule(image, max: 1)]);
         var page = await CreatePageAsync("culturePage", dataType, variesByCulture: true);
         var content = ContentService.Create("Cultures", Constants.System.Root, page.Alias);
         content.SetCultureName("English", "en-US");
@@ -131,34 +123,35 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
         content.SetValue("blocks", BlockList((image.Key, 4)), "da-DK");
         ContentService.Save(content, Constants.Security.SuperUserId, null);
 
-        var english = ContentService.Publish(content, ["en-US"], Constants.Security.SuperUserId);
+        var english = ContentService.SaveAndPublish(content, ["en-US"], Constants.Security.SuperUserId);
         Assert.That(english.Success, Is.True, Describe(english));
 
-        var danish = ContentService.Publish(content, ["da-DK"], Constants.Security.SuperUserId);
+        var danish = ContentService.SaveAndPublish(content, ["da-DK"], Constants.Security.SuperUserId);
         Assert.That(danish.Result, Is.EqualTo(PublishResultType.FailedPublishCancelledByEvent), Describe(danish));
-        Assert.That(Describe(danish), Does.Contain("da-DK").And.Contain("at most 1"));
+        Assert.That(Describe(danish), Does.Contain("da-dk").IgnoreCase.And.Contain("at most 1"));
     }
 
     [Test]
-    public async Task Editing_service_save_keeps_drafts_and_publish_is_cancelled()
+    public async Task Saving_keeps_drafts_and_publish_is_cancelled()
     {
         var image = await CreateElementAsync("editingImage");
-        var dataType = await CreateBlockDataTypeAsync(BlockEditors.BlockList, "Umb.PropertyEditorUi.BlockList", [Rule(image, 1, 1)]);
+        var dataType = await CreateBlockDataTypeAsync(BlockEditors.BlockList, [Rule(image, 1, 1)]);
         var page = await CreatePageAsync("editingPage", dataType);
-        var draft = await EditingService.CreateAsync(CreateModel(page.Key, BlockList((image.Key, 0))), Constants.Security.SuperUserKey);
+        var draft = ContentService.Create("Draft", Constants.System.Root, page.Alias);
+        draft.SetValue("blocks", BlockList((image.Key, 0)));
+        var saved = ContentService.Save(draft, Constants.Security.SuperUserId);
 
-        Assert.That(draft.Success, Is.True, draft.Status.ToString());
+        Assert.That(saved.Success, Is.True, saved.Result.ToString());
 
-        var rejected = await EditingService.CreateAndPublishAsync(CreateModel(page.Key, BlockList((image.Key, 0))), [], Constants.Security.SuperUserKey);
-        Assert.That(rejected.Success, Is.False, rejected.Status.ToString());
-        Assert.That(rejected.Status, Is.EqualTo(ContentEditingOperationStatus.CancelledByNotification));
+        var rejected = ContentService.SaveAndPublish(draft, "*", Constants.Security.SuperUserId);
+        Assert.That(rejected.Success, Is.False, Describe(rejected));
+        Assert.That(rejected.Result, Is.EqualTo(PublishResultType.FailedPublishCancelledByEvent), Describe(rejected));
 
-        var published = await EditingService.UpdateAndPublishAsync(
-            draft.Result!.Content!.Key,
-            UpdateModel(BlockList((image.Key, 1))),
-            [],
-            Constants.Security.SuperUserKey);
-        Assert.That(published.Success, Is.True, published.Status.ToString());
+        var stored = ContentService.GetById(draft.Id);
+        Assert.That(stored, Is.Not.Null);
+        stored!.SetValue("blocks", BlockList((image.Key, 1)));
+        var published = ContentService.SaveAndPublish(stored, "*", Constants.Security.SuperUserId);
+        Assert.That(published.Success, Is.True, Describe(published));
     }
 
     private async Task<IContentType> CreateElementAsync(string alias, params (string Alias, string Name, IDataType DataType)[] properties)
@@ -201,56 +194,63 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
         return contentType;
     }
 
-    private async Task<IDataType> CreateBlockDataTypeAsync(string editorAlias, string editorUiAlias, IReadOnlyList<BlockCountRule> rules)
+    private Task<IDataType> CreateBlockDataTypeAsync(string editorAlias, IReadOnlyList<BlockCountRule> rules)
     {
         var editors = GetRequiredService<PropertyEditorCollection>();
         Assert.That(editors.TryGet(editorAlias, out var editor), Is.True, $"Missing property editor {editorAlias}.");
-        var dataType = new DataType(editor!, GetRequiredService<IConfigurationEditorJsonSerializer>())
+        Assert.That(editor!.GetConfigurationEditor().Fields.Select(field => field.Key), Does.Contain("blocks").And.Contain("validationLimit"));
+        var dataType = new DataType(editor, GetRequiredService<IConfigurationEditorJsonSerializer>())
         {
             Name = Unique(editorAlias),
             DatabaseType = ValueStorageType.Ntext,
-            EditorUiAlias = editorUiAlias,
-            ConfigurationData = new Dictionary<string, object>
-            {
-                ["blocks"] = rules.Select(rule => new Dictionary<string, object?>
-                {
-                    ["contentElementTypeKey"] = rule.ContentElementTypeKey.ToString(),
-                    ["blockCount"] = new Dictionary<string, object?>
-                    {
-                        ["min"] = rule.Min,
-                        ["max"] = rule.Max,
-                    },
-                }).ToList(),
-            },
+            Configuration = CreateConfiguration(editorAlias, rules),
         };
 
-        await DataTypeService.CreateAsync(dataType, Constants.Security.SuperUserKey);
-        return (await DataTypeService.GetAsync(dataType.Key))!;
+        DataTypeService.Save(dataType, Constants.Security.SuperUserId);
+        return Task.FromResult(DataTypeService.GetDataType(dataType.Key)!);
     }
 
-    private async Task EnsureLanguageAsync(string isoCode, string name)
+    private static object CreateConfiguration(string editorAlias, IReadOnlyList<BlockCountRule> rules)
     {
-        if (await LanguageService.GetAsync(isoCode) is not null)
+        var limits = rules.Select(rule => new BlockCountLimit
         {
-            return;
+            ContentElementTypeKey = rule.ContentElementTypeKey,
+            Min = rule.Min,
+            Max = rule.Max,
+        }).ToArray();
+
+        if (BlockEditors.IsGrid(editorAlias))
+        {
+            return new BlockCountGridConfiguration
+            {
+                Blocks = rules.Select(rule => new BlockGridConfiguration.BlockGridBlockConfiguration
+                {
+                    ContentElementTypeKey = rule.ContentElementTypeKey,
+                }).ToArray(),
+                BlockCounts = limits,
+            };
         }
 
-        await LanguageService.CreateAsync(new Language(isoCode, name), Constants.Security.SuperUserKey);
+        return new BlockCountListConfiguration
+        {
+            Blocks = rules.Select(rule => new BlockListConfiguration.BlockConfiguration
+            {
+                ContentElementTypeKey = rule.ContentElementTypeKey,
+            }).ToArray(),
+            BlockCounts = limits,
+        };
     }
 
-    private static ContentCreateModel CreateModel(Guid contentTypeKey, string value) => new()
+    private Task EnsureLanguageAsync(string isoCode, string name)
     {
-        ContentTypeKey = contentTypeKey,
-        ParentKey = null,
-        Variants = [new VariantModel { Name = "Home" }],
-        Properties = [new PropertyValueModel { Alias = "blocks", Value = value }],
-    };
+        if (LocalizationService.GetLanguageByIsoCode(isoCode) is not null)
+        {
+            return Task.CompletedTask;
+        }
 
-    private static ContentUpdateModel UpdateModel(string value) => new()
-    {
-        Variants = [new VariantModel { Name = "Home" }],
-        Properties = [new PropertyValueModel { Alias = "blocks", Value = value }],
-    };
+        LocalizationService.Save(new Language(isoCode, name), Constants.Security.SuperUserId);
+        return Task.CompletedTask;
+    }
 
     private static BlockCountRule Rule(IContentType contentType, int? min = null, int? max = null) => new()
     {
@@ -276,22 +276,12 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
             for (var index = 0; index < count; index++)
             {
                 var key = Guid.NewGuid();
-                contentData.Add(new JsonObject
-                {
-                    ["key"] = key.ToString(),
-                    ["contentTypeKey"] = type.ToString(),
-                    ["values"] = new JsonArray(),
-                });
-                layout.Add(new JsonObject { ["contentKey"] = key.ToString() });
+                contentData.Add(ContentData(key, type));
+                layout.Add(LayoutItem(key));
             }
         }
 
-        return new JsonObject
-        {
-            ["contentData"] = contentData,
-            ["settingsData"] = new JsonArray(),
-            ["layout"] = new JsonObject { [BlockEditors.BlockList] = layout },
-        }.ToJsonString();
+        return BlockValue(BlockEditors.BlockList, contentData, layout);
     }
 
     private static string BlockGrid(params Guid[] types)
@@ -302,13 +292,8 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
         foreach (var type in types)
         {
             var key = Guid.NewGuid();
-            contentData.Add(new JsonObject
-            {
-                ["key"] = key.ToString(),
-                ["contentTypeKey"] = type.ToString(),
-                ["values"] = new JsonArray(),
-            });
-            var item = new JsonObject { ["contentKey"] = key.ToString() };
+            contentData.Add(ContentData(key, type));
+            var item = LayoutItem(key);
             if (root is null)
             {
                 root = item;
@@ -333,12 +318,7 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
             },
         };
 
-        return new JsonObject
-        {
-            ["contentData"] = contentData,
-            ["settingsData"] = new JsonArray(),
-            ["layout"] = new JsonObject { [BlockEditors.BlockGrid] = new JsonArray { root } },
-        }.ToJsonString();
+        return BlockValue(BlockEditors.BlockGrid, contentData, new JsonArray { root });
     }
 
     private static string NestedCards(Guid cardType, Guid imageType, int imageCount)
@@ -348,46 +328,35 @@ public class BlockCountPublishingTests : UmbracoIntegrationTest
         for (var index = 0; index < imageCount; index++)
         {
             var key = Guid.NewGuid();
-            images.Add(new JsonObject
-            {
-                ["key"] = key.ToString(),
-                ["contentTypeKey"] = imageType.ToString(),
-                ["values"] = new JsonArray(),
-            });
-            imageLayout.Add(new JsonObject { ["contentKey"] = key.ToString() });
+            images.Add(ContentData(key, imageType));
+            imageLayout.Add(LayoutItem(key));
         }
 
-        var slides = new JsonObject
-        {
-            ["contentData"] = images,
-            ["settingsData"] = new JsonArray(),
-            ["layout"] = new JsonObject { [BlockEditors.BlockList] = imageLayout },
-        };
+        var slides = JsonNode.Parse(BlockValue(BlockEditors.BlockList, images, imageLayout))!;
         var cardKey = Guid.NewGuid();
-        return new JsonObject
-        {
-            ["contentData"] = new JsonArray
-            {
-                new JsonObject
-                {
-                    ["key"] = cardKey.ToString(),
-                    ["contentTypeKey"] = cardType.ToString(),
-                    ["values"] = new JsonArray
-                    {
-                        new JsonObject
-                        {
-                            ["alias"] = "slides",
-                            ["editorAlias"] = BlockEditors.BlockList,
-                            ["value"] = slides,
-                        },
-                    },
-                },
-            },
-            ["settingsData"] = new JsonArray(),
-            ["layout"] = new JsonObject
-            {
-                [BlockEditors.BlockList] = new JsonArray { new JsonObject { ["contentKey"] = cardKey.ToString() } },
-            },
-        }.ToJsonString();
+        var card = ContentData(cardKey, cardType);
+        card["slides"] = slides;
+        return BlockValue(BlockEditors.BlockList, new JsonArray { card }, new JsonArray { LayoutItem(cardKey) });
     }
+
+    private static JsonObject ContentData(Guid key, Guid contentTypeKey) => new()
+    {
+        ["udi"] = ElementUdi(key),
+        ["contentTypeKey"] = contentTypeKey.ToString(),
+    };
+
+    private static JsonObject LayoutItem(Guid key) => new()
+    {
+        ["contentUdi"] = ElementUdi(key),
+    };
+
+    private static string ElementUdi(Guid key) => $"umb://element/{key:N}";
+
+    private static string BlockValue(string editorAlias, JsonArray contentData, JsonArray layout) =>
+        new JsonObject
+        {
+            ["contentData"] = contentData,
+            ["settingsData"] = new JsonArray(),
+            ["layout"] = new JsonObject { [editorAlias] = layout },
+        }.ToJsonString();
 }

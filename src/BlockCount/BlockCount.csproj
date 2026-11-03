@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>BlockCount</RootNamespace>
     <AssemblyName>BlockCount</AssemblyName>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <StaticWebAssetBasePath>App_Plugins/BlockCount</StaticWebAssetBasePath>
     <PackageId>BlockCount</PackageId>
-    <Version>1.17.3</Version>
+    <Version>13.1.0</Version>
     <Authors>Farshadudheen k</Authors>
     <Description>Add powerful validation rules to Umbraco Block List content, helping editors ensure blocks meet your content requirements before publishing.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -23,7 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Umbraco.Cms.Web.Common" Version="[17.7.1, 18.0.0)" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="[13.0.0, 14.0.0)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,16 +33,5 @@
     </None>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
-
-  <Target Name="BuildBlockCountClient" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true' AND '$(BlockCountSkipClientBuild)' != 'true'">
-    <PropertyGroup>
-      <BlockCountNodePath Condition="'$(BlockCountNodePath)' == ''">C:\Program Files\nodejs</BlockCountNodePath>
-      <BlockCountNpm Condition="'$(BlockCountNpm)' == '' AND Exists('$(BlockCountNodePath)\npm.cmd')">$(BlockCountNodePath)\npm.cmd</BlockCountNpm>
-      <BlockCountNpm Condition="'$(BlockCountNpm)' == ''">npm</BlockCountNpm>
-      <BlockCountNpmCommand>set "PATH=$(BlockCountNodePath);%25PATH%25" &amp;&amp; "$(BlockCountNpm)"</BlockCountNpmCommand>
-    </PropertyGroup>
-    <Exec Command="$(BlockCountNpmCommand) ci" WorkingDirectory="$(MSBuildThisFileDirectory)..\BlockCount.Client" Condition="!Exists('$(MSBuildThisFileDirectory)..\BlockCount.Client\node_modules')" />
-    <Exec Command="$(BlockCountNpmCommand) run build" WorkingDirectory="$(MSBuildThisFileDirectory)..\BlockCount.Client" />
-  </Target>
 
 </Project>

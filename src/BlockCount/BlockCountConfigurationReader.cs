@@ -10,6 +10,23 @@ public static class BlockCountConfigurationReader
 
     public const string BlockCountAlias = "blockCount";
 
+    public static IReadOnlyList<BlockCountRule> Read(object? configuration)
+    {
+        switch (configuration)
+        {
+            case null:
+                return [];
+            case IDictionary<string, object> data:
+                return Read(data);
+            case BlockCountListConfiguration list:
+                return FromLimits(list.BlockCounts);
+            case BlockCountGridConfiguration grid:
+                return FromLimits(grid.BlockCounts);
+            default:
+                return [];
+        }
+    }
+
     public static IReadOnlyList<BlockCountRule> Read(IDictionary<string, object>? configurationData)
     {
         if (configurationData is null)
@@ -55,6 +72,32 @@ public static class BlockCountConfigurationReader
                 ContentElementTypeKey = contentTypeKey,
                 Min = BlockCountJson.ReadInt(BlockCountJson.Property(count, "min")),
                 Max = BlockCountJson.ReadInt(BlockCountJson.Property(count, "max")),
+            });
+        }
+
+        return rules;
+    }
+
+    private static IReadOnlyList<BlockCountRule> FromLimits(IEnumerable<BlockCountLimit>? limits)
+    {
+        if (limits is null)
+        {
+            return [];
+        }
+
+        var rules = new List<BlockCountRule>();
+        foreach (var limit in limits)
+        {
+            if (limit.ContentElementTypeKey == Guid.Empty)
+            {
+                continue;
+            }
+
+            rules.Add(new BlockCountRule
+            {
+                ContentElementTypeKey = limit.ContentElementTypeKey,
+                Min = limit.Min,
+                Max = limit.Max,
             });
         }
 
@@ -134,6 +177,29 @@ internal static class BlockCountJson
         }
 
         return value.TryGetValue<string>(out var text) && Guid.TryParse(text, out key);
+    }
+
+    public static bool TryBlockKey(JsonNode? node, out Guid key)
+    {
+        if (TryGuid(node, out key))
+        {
+            return true;
+        }
+
+        key = default;
+        if (node is not JsonValue value || !value.TryGetValue<string>(out var text))
+        {
+            return false;
+        }
+
+        const string prefix = "umb://";
+        if (!text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var separator = text.LastIndexOf('/');
+        return separator >= 0 && separator < text.Length - 1 && Guid.TryParse(text[(separator + 1)..], out key);
     }
 
     public static int? ReadInt(JsonNode? node)

@@ -83,10 +83,10 @@ public sealed class BlockCountContentValidator
         int depth)
     {
         var value = ParseStoredValue(rawValue);
-        var rules = await ReadRulesAsync(propertyType, cancellationToken).ConfigureAwait(false);
+        var rules = ReadRules(propertyType, cancellationToken);
         if (rules.Count > 0)
         {
-            var ruleNames = await ResolveNamesAsync(rules.Select(rule => rule.ContentElementTypeKey), names, cancellationToken).ConfigureAwait(false);
+            var ruleNames = ResolveNames(rules.Select(rule => rule.ContentElementTypeKey), names, cancellationToken);
             foreach (var issue in BlockCountEvaluator.Evaluate(propertyType.PropertyEditorAlias, value, rules, ruleNames))
             {
                 messages.Add($"{location}: {issue.Message}");
@@ -115,7 +115,7 @@ public sealed class BlockCountContentValidator
         foreach (var nested in BlockCountEvaluator.ReadNestedBlocks(value))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var elementType = await _contentTypeService.GetAsync(nested.ElementTypeKey).ConfigureAwait(false);
+            var elementType = _contentTypeService.Get(nested.ElementTypeKey);
             var propertyType = elementType?.CompositionPropertyTypes.FirstOrDefault(property =>
                 string.Equals(property.Alias, nested.Alias, StringComparison.OrdinalIgnoreCase));
             if (propertyType is null || !BlockEditors.IsSupported(propertyType.PropertyEditorAlias))
@@ -137,7 +137,7 @@ public sealed class BlockCountContentValidator
                 }
             }
 
-            var elementName = await ResolveNameAsync(nested.ElementTypeKey, names, cancellationToken).ConfigureAwait(false);
+            var elementName = ResolveName(nested.ElementTypeKey, names, cancellationToken);
             var nestedLocation = $"{location} / {elementName} / {propertyType.Name}";
             var nestedCulture = propertyType.VariesByCulture() ? nested.Culture ?? culture : null;
             await ValidatePropertyAsync(
@@ -174,27 +174,27 @@ public sealed class BlockCountContentValidator
         return isCulturePublishing(valueCulture);
     }
 
-    private async Task<IReadOnlyList<BlockCountRule>> ReadRulesAsync(IPropertyType propertyType, CancellationToken cancellationToken)
+    private IReadOnlyList<BlockCountRule> ReadRules(IPropertyType propertyType, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var dataType = await _dataTypeService.GetAsync(propertyType.DataTypeKey).ConfigureAwait(false);
-        return dataType is null ? [] : BlockCountConfigurationReader.Read(dataType.ConfigurationData);
+        var dataType = _dataTypeService.GetDataType(propertyType.DataTypeKey);
+        return dataType is null ? [] : BlockCountConfigurationReader.Read(dataType.Configuration);
     }
 
-    private async Task<IReadOnlyDictionary<Guid, string>> ResolveNamesAsync(
+    private IReadOnlyDictionary<Guid, string> ResolveNames(
         IEnumerable<Guid> keys,
         Dictionary<Guid, string> names,
         CancellationToken cancellationToken)
     {
         foreach (var key in keys.Distinct())
         {
-            await ResolveNameAsync(key, names, cancellationToken).ConfigureAwait(false);
+            ResolveName(key, names, cancellationToken);
         }
 
         return names;
     }
 
-    private async Task<string> ResolveNameAsync(Guid key, Dictionary<Guid, string> names, CancellationToken cancellationToken)
+    private string ResolveName(Guid key, Dictionary<Guid, string> names, CancellationToken cancellationToken)
     {
         if (names.TryGetValue(key, out var cached))
         {
@@ -202,7 +202,7 @@ public sealed class BlockCountContentValidator
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        var contentType = await _contentTypeService.GetAsync(key).ConfigureAwait(false);
+        var contentType = _contentTypeService.Get(key);
         var name = string.IsNullOrWhiteSpace(contentType?.Name) ? "Block" : contentType.Name;
         names[key] = name;
         return name;

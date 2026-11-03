@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<language alias="en" intName="English (UK)" localName="English (UK)" lcid="" culture="en-GB">
+    <area alias="blockCount">
+        <key alias="amount">Amount</key>
+        <key alias="amountDescription">Minimum and maximum number of this block type. Leave either value empty for no limit. Set both to the same number for an exact count.</key>
+        <key alias="count">Count</key>
+    </area>
+</language>

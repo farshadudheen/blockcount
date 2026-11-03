@@ -1,299 +1,465 @@
-var I = (t) => {
-  throw TypeError(t);
-};
-var P = (t, e, o) => e.has(t) || I("Cannot " + o);
-var s = (t, e, o) => (P(t, e, "read from private field"), o ? o.call(t) : e.get(t)), d = (t, e, o) => e.has(t) ? I("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(t) : e.set(t, o), f = (t, e, o, i) => (P(t, e, "write to private field"), i ? i.call(t, o) : e.set(t, o), o), k = (t, e, o) => (P(t, e, "access private method"), o);
-import { UMB_WORKSPACE_CONDITION_ALIAS as J } from "@umbraco-cms/backoffice/workspace";
-import { UmbControllerBase as Q } from "@umbraco-cms/backoffice/class-api";
-import { UMB_DOCUMENT_TYPE_ITEM_REPOSITORY_ALIAS as Z } from "@umbraco-cms/backoffice/document-type";
-import { UMB_PROPERTY_CONTEXT as tt, UMB_PROPERTY_DATASET_CONTEXT as et } from "@umbraco-cms/backoffice/property";
-import { UmbRepositoryItemsManager as ot } from "@umbraco-cms/backoffice/repository";
-import { UMB_VALIDATION_CONTEXT as it } from "@umbraco-cms/backoffice/validation";
-import { css as nt, customElement as rt, html as st } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement as at } from "@umbraco-cms/backoffice/lit-element";
-import { UmbTextStyles as ct } from "@umbraco-cms/backoffice/style";
-const D = "Umbraco.BlockList", N = "Umbraco.BlockGrid";
-function z(t) {
-  return t === 1 ? "entry" : "entries";
-}
-function lt(t, e, o) {
-  return `${t} requires at least ${e} ${z(e)}. The current count is ${o}.`;
-}
-function ut(t, e, o) {
-  return `${t} allows at most ${e} ${z(e)}. The current count is ${o}.`;
-}
-function mt(t, e, o) {
-  return `${t} must contain exactly ${e} ${z(e)}. The current count is ${o}.`;
-}
-function pt(t) {
-  return `The count configuration for ${t} is invalid. The minimum must be less than or equal to the maximum.`;
-}
-function G(t) {
-  return `The count configuration for ${t} is invalid. Minimum and maximum must be zero or greater.`;
-}
-function ht(t) {
-  return t.map((e) => dt(e.message)).join("<br>");
-}
-function dt(t) {
-  return t.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-}
-function ft(t, e, o, i) {
-  const n = yt(t, i), r = [], c = /* @__PURE__ */ new Set();
-  for (const u of e) {
-    const a = A(u.contentElementTypeKey);
-    if (!a || c.has(a))
-      continue;
-    c.add(a);
-    const p = (o == null ? void 0 : o.get(a)) || (o == null ? void 0 : o.get(u.contentElementTypeKey)) || "Block", m = S(u.min), y = S(u.max);
-    if (m !== void 0 && m < 0 || y !== void 0 && y < 0) {
-      r.push(w(a, p, "invalidConfiguration", G(p)));
-      continue;
-    }
-    if (m !== void 0 && y !== void 0 && m > y) {
-      r.push(w(a, p, "invalidConfiguration", pt(p)));
-      continue;
-    }
-    if (m === void 0 && y === void 0)
-      continue;
-    const v = n.get(a) ?? 0;
-    if (m !== void 0 && y === m && v !== m) {
-      r.push(w(a, p, "exact", mt(p, m, v)));
-      continue;
-    }
-    m !== void 0 && v < m && r.push(w(a, p, "belowMinimum", lt(p, m, v))), y !== void 0 && v > y && r.push(w(a, p, "aboveMaximum", ut(p, y, v)));
-  }
-  return r;
-}
-function yt(t, e) {
-  const o = /* @__PURE__ */ new Map(), i = /* @__PURE__ */ new Map();
-  for (const r of (t == null ? void 0 : t.contentData) ?? [])
-    !r.key || !r.contentTypeKey || i.set(A(r.key), A(r.contentTypeKey));
-  const n = (t == null ? void 0 : t.layout) ?? {};
-  for (const [r, c] of Object.entries(n)) {
-    if (!Array.isArray(c))
-      continue;
-    const u = r.toLowerCase(), a = u === N.toLowerCase();
-    !(u === D.toLowerCase()) && !a || e && u !== e.toLowerCase() || q(c, i, o, a);
-  }
-  return o;
-}
-function q(t, e, o, i) {
-  var n;
-  for (const r of t) {
-    const c = r.contentKey ? A(r.contentKey) : "", u = c ? e.get(c) : void 0;
-    if (u && o.set(u, (o.get(u) ?? 0) + 1), !!i)
-      for (const a of r.areas ?? [])
-        (n = a.items) != null && n.length && q(a.items, e, o, i);
-  }
-}
-function S(t) {
-  return t ?? void 0;
-}
-function A(t) {
-  return t.trim().toLowerCase();
-}
-function w(t, e, o, i) {
-  return { contentElementTypeKey: t, blockName: e, kind: o, message: i };
-}
-const kt = {
-  "Umb.PropertyEditorUi.BlockList": D,
-  "Umb.PropertyEditorUi.BlockGrid": N
-};
-var _, T, g, B, E, h, b, M, l, Y, K, C;
-class bt extends Q {
-  constructor(o) {
-    super(o);
-    d(this, l);
-    d(this, _, []);
-    d(this, T);
-    d(this, g);
-    d(this, B, /* @__PURE__ */ new Map());
-    d(this, E, []);
-    d(this, h);
-    d(this, b);
-    d(this, M, new ot(this, Z));
-    this.consumeContext(tt, (i) => {
-      i && (this.observe(
-        i.value,
-        (n) => {
-          f(this, T, n), k(this, l, C).call(this);
-        },
-        "blockCountValue"
-      ), this.observe(
-        i.config,
-        (n) => {
-          f(this, _, Ct(n));
-          const r = s(this, _).map((c) => c.contentElementTypeKey).filter((c) => !!c);
-          s(this, M).setUniques(r), k(this, l, C).call(this);
-        },
-        "blockCountConfig"
-      ), this.observe(
-        i.editorManifest,
-        (n) => {
-          f(this, g, n != null && n.alias ? kt[n.alias] : void 0), k(this, l, C).call(this);
-        },
-        "blockCountEditor"
-      ), this.observe(
-        i.editor,
-        (n) => {
-          k(this, l, Y).call(this, n), k(this, l, C).call(this);
-        },
-        "blockCountEditorElement"
-      ));
-    }), this.observe(s(this, M).items, (i) => {
-      f(this, B, new Map(i.map((n) => [n.unique.toLowerCase(), n.name || "Block"]))), k(this, l, C).call(this);
+(function () {
+    "use strict";
+
+    var blockListEditorAlias = "Umbraco.BlockList";
+    var blockGridEditorAlias = "Umbraco.BlockGrid";
+
+    var countPanel =
+        '<div class="umb-group-panel" data-block-count>' +
+            '<div class="umb-group-panel__header">' +
+                '<localize key="blockCount_count">Count</localize>' +
+            "</div>" +
+            '<div class="umb-group-panel__content">' +
+                '<div class="control-group umb-control-group -no-border">' +
+                    '<div class="umb-el-wrap">' +
+                        '<label class="control-label">' +
+                            '<localize key="blockCount_amount">Amount</localize>' +
+                        "</label>" +
+                        '<div class="controls">' +
+                            "<block-count-amount></block-count-amount>" +
+                            '<p class="help">' +
+                                '<localize key="blockCount_amountDescription">Minimum and maximum number of this block type. Leave either value empty for no limit. Set both to the same number for an exact count.</localize>' +
+                            "</p>" +
+                        "</div>" +
+                    "</div>" +
+                "</div>" +
+            "</div>" +
+        "</div>";
+
+    var validationMarkup =
+        '<div data-block-count-validation>' +
+            '<input type="hidden" name="blockCount" ng-model="vm.layout" />' +
+            '<div class="help text-error" ng-repeat="message in vm.blockCountMessages track by $index" ng-bind="message"></div>' +
+        "</div>";
+
+    angular.module("umbraco").config(["$httpProvider", "$provide", function ($httpProvider, $provide) {
+        $httpProvider.interceptors.push("blockCountTemplateInterceptor");
+
+        $provide.decorator("umbBlockListPropertyEditorDirective", ["$delegate", function ($delegate) {
+            decorateEditor($delegate, function ($scope) {
+                return $scope;
+            }, blockListEditorAlias, [
+                "$scope", "$timeout", "$interpolate", "editorService", "clipboardService", "localizationService",
+                "overlayService", "blockEditorService", "udiService", "serverValidationManager", "angularHelper",
+                "eventsService", "$attrs"
+            ]);
+            return $delegate;
+        }]);
+
+        $provide.decorator("umbBlockGridPropertyEditorDirective", ["$delegate", function ($delegate) {
+            decorateEditor($delegate, function ($element, $attrs, $scope) {
+                return $scope;
+            }, blockGridEditorAlias, [
+                "$element", "$attrs", "$scope", "$timeout", "$q", "editorService", "clipboardService",
+                "localizationService", "overlayService", "blockEditorService", "udiService", "serverValidationManager",
+                "angularHelper", "eventsService", "assetsService", "umbRequestHelper"
+            ]);
+            return $delegate;
+        }]);
+    }]);
+
+    angular.module("umbraco").factory("blockCountTemplateInterceptor", function () {
+        return {
+            response: function (response) {
+                var url = response.config && response.config.url || "";
+                if (typeof response.data !== "string" || response.data.indexOf("data-block-count") !== -1) {
+                    return response;
+                }
+
+                if (url.indexOf("blocklist.blockconfiguration.overlay.html") !== -1) {
+                    response.data = insertListPanel(response.data);
+                } else if (url.indexOf("blockgrid.blockconfiguration.overlay.html") !== -1) {
+                    response.data = insertGridTab(response.data);
+                } else if (url.indexOf("umb-block-list-property-editor.html") !== -1 || url.indexOf("umb-block-grid-property-editor.html") !== -1) {
+                    response.data = insertValidation(response.data);
+                }
+
+                return response;
+            }
+        };
     });
-  }
-  destroy() {
-    k(this, l, K).call(this), super.destroy();
-  }
-}
-_ = new WeakMap(), T = new WeakMap(), g = new WeakMap(), B = new WeakMap(), E = new WeakMap(), h = new WeakMap(), b = new WeakMap(), M = new WeakMap(), l = new WeakSet(), Y = function(o) {
-  const i = vt(o) ? o : void 0;
-  s(this, h) !== i && (k(this, l, K).call(this), i && (f(this, h, i), f(this, b, i.addValidator(
-    "customError",
-    () => ht(s(this, E)),
-    () => s(this, E).length > 0
-  ))));
-}, K = function() {
-  s(this, h) && s(this, b) && s(this, h).removeValidator(s(this, b)), f(this, h, void 0), f(this, b, void 0);
-}, C = function() {
-  f(this, E, s(this, g) ? ft(s(this, T), s(this, _), s(this, B), s(this, g)) : []), s(this, h) && s(this, h).pristine === !1 && s(this, h).checkValidity();
-};
-function vt(t) {
-  if (!t || typeof t != "object")
-    return !1;
-  const e = t;
-  return typeof e.addValidator == "function" && typeof e.removeValidator == "function" && typeof e.checkValidity == "function";
-}
-function Ct(t) {
-  return _t(t).filter((o) => !!o.contentElementTypeKey).map((o) => {
-    var i, n;
-    return {
-      contentElementTypeKey: o.contentElementTypeKey,
-      min: (i = o.blockCount) == null ? void 0 : i.min,
-      max: (n = o.blockCount) == null ? void 0 : n.max
-    };
-  });
-}
-function _t(t) {
-  if (!t || typeof t != "object" || !("getValueByAlias" in t))
-    return [];
-  const e = t.getValueByAlias("blocks");
-  return Array.isArray(e) ? e : [];
-}
-var gt = Object.getOwnPropertyDescriptor, X = (t) => {
-  throw TypeError(t);
-}, Et = (t, e, o, i) => {
-  for (var n = i > 1 ? void 0 : i ? gt(e, o) : e, r = t.length - 1, c; r >= 0; r--)
-    (c = t[r]) && (n = c(n) || n);
-  return n;
-}, W = (t, e, o) => e.has(t) || X("Cannot " + o), V = (t, e, o) => (W(t, e, "read from private field"), e.get(t)), $ = (t, e, o) => e.has(t) ? X("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(t) : e.set(t, o), wt = (t, e, o, i) => (W(t, e, "write to private field"), e.set(t, o), o), j = (t, e, o) => (W(t, e, "access private method"), o), U, x, L, H, F;
-let O = class extends at {
-  constructor() {
-    super(), $(this, L), $(this, U), $(this, x, "blockCount:negative"), this.consumeContext(it, (t) => {
-      wt(this, U, t);
-    }), this.consumeContext(et, (t) => {
-      t && j(this, L, H).call(this, t);
+
+    angular.module("umbraco").directive("blockCountAmount", function () {
+        return {
+            restrict: "E",
+            controller: ["$scope", function ($scope) {
+                var block = $scope.vm && $scope.vm.block;
+                if (!block) {
+                    return;
+                }
+
+                if (!block.blockCount || typeof block.blockCount !== "object") {
+                    block.blockCount = {};
+                }
+
+                $scope.blockCountModel = {
+                    alias: "blockCount",
+                    hideLabel: true,
+                    view: "numberrange",
+                    config: {},
+                    value: block.blockCount
+                };
+            }],
+            template: '<umb-property-editor model="blockCountModel" is-pre-value="true"></umb-property-editor>'
+        };
     });
-  }
-  render() {
-    return st`
-            <uui-box headline=${this.localize.term("blockCount_amount")}>
-                <umb-property
-                    .label=${this.localize.term("blockCount_amount")}
-                    .description=${this.localize.term("blockCount_amountDescription")}
-                    alias="blockCount"
-                    property-editor-ui-alias="Umb.PropertyEditorUi.NumberRange">
-                </umb-property>
-            </uui-box>
-        `;
-  }
-};
-U = /* @__PURE__ */ new WeakMap();
-x = /* @__PURE__ */ new WeakMap();
-L = /* @__PURE__ */ new WeakSet();
-H = async function(t) {
-  const e = await t.propertyValueByAlias("blockCount");
-  e && this.observe(e, (o) => j(this, L, F).call(this, o), "blockCountConfiguration");
-};
-F = function(t) {
-  const e = V(this, U);
-  if (!e)
-    return;
-  e.messages.removeMessageByKey(V(this, x));
-  const o = t == null ? void 0 : t.min, i = t == null ? void 0 : t.max;
-  (o != null && o < 0 || i != null && i < 0) && e.messages.addMessage("custom", "$", G("this block"), V(this, x));
-};
-O.styles = [
-  ct,
-  nt`
-            :host {
-                display: block;
-                margin: var(--uui-size-layout-1);
-                padding-bottom: var(--uui-size-layout-1);
+
+    angular.module("umbraco").directive("blockCountGridTab", ["localizationService", function (localizationService) {
+        return {
+            restrict: "E",
+            link: function (scope) {
+                var vm = scope.vm;
+                if (!vm) {
+                    return;
+                }
+
+                function ensure() {
+                    var navigation = vm.navigation;
+                    if (!angular.isArray(navigation) || navigation.length === 0) {
+                        return;
+                    }
+
+                    if (navigation.some(function (item) { return item.alias === "count"; })) {
+                        return;
+                    }
+
+                    navigation.push({
+                        alias: "count",
+                        name: "Count",
+                        icon: "icon-list",
+                        view: "",
+                        active: false
+                    });
+
+                    localizationService.localize("blockCount_count").then(function (name) {
+                        var item = (vm.navigation || []).find(function (entry) { return entry.alias === "count"; });
+                        if (item && name && name.indexOf("blockCount_") === -1) {
+                            item.name = name;
+                        }
+                    });
+                }
+
+                scope.$watch(function () { return vm.navigation; }, ensure);
+                scope.$watchCollection(function () { return vm.navigation; }, ensure);
+            }
+        };
+    }]);
+
+    function decorateEditor(directives, scopeFrom, editorAlias, inject) {
+        var directive = directives[0];
+        var original = directive.controller;
+        var controller = function () {
+            original.apply(this, arguments);
+            var args = Array.prototype.slice.call(arguments);
+            var $scope = scopeFrom.apply(null, args);
+            attachValidation(this, $scope, editorAlias);
+        };
+        controller.$inject = inject;
+        directive.controller = controller;
+    }
+
+    function attachValidation(vm, $scope, editorAlias) {
+        var originalInit = vm.$onInit;
+        vm.$onInit = function () {
+            if (angular.isFunction(originalInit)) {
+                originalInit.apply(vm, arguments);
             }
 
-            uui-box {
-                margin-top: var(--uui-size-layout-1);
-            }
-        `
-];
-O = Et([
-  rt("block-count-workspace-view")
-], O);
-const Tt = "Umb.Workspace.BlockListType", Bt = "Umb.Workspace.BlockGridType", Mt = [
-  {
-    type: "localization",
-    alias: "BlockCount.Localization.En",
-    name: "BlockCount English",
-    meta: {
-      culture: "en",
-      localizations: {
-        blockCount: {
-          amount: "Amount",
-          amountDescription: "Minimum and maximum number of this block type. Leave either value empty for no limit. Set both to the same number for an exact count.",
-          count: "Count"
-        }
-      }
+            $scope.$watch(function () {
+                return snapshot(vm);
+            }, function () {
+                applyValidation(vm, editorAlias);
+            });
+        };
     }
-  },
-  R("BlockCount.WorkspaceView.BlockListType", Tt),
-  R("BlockCount.WorkspaceView.BlockGridType", Bt),
-  {
-    type: "propertyContext",
-    alias: "BlockCount.PropertyContext",
-    name: "Block Count Property Context",
-    api: bt,
-    forPropertyEditorUis: ["Umb.PropertyEditorUi.BlockList", "Umb.PropertyEditorUi.BlockGrid"],
-    meta: {}
-  }
-];
-function R(t, e) {
-  return {
-    type: "workspaceView",
-    alias: t,
-    name: "Block Count",
-    elementName: "block-count-workspace-view",
-    weight: 900,
-    meta: {
-      label: "#blockCount_count",
-      pathname: "count",
-      icon: "icon-list"
-    },
-    conditions: [
-      {
-        alias: J,
-        match: e
-      }
-    ]
-  };
-}
-const Wt = (t, e) => {
-  e.registerMany(Mt);
-};
-export {
-  Mt as manifests,
-  Wt as onInit
-};
-//# sourceMappingURL=blockcount.js.map
+
+    function insertListPanel(html) {
+        var container = html.lastIndexOf("</umb-editor-container>");
+        if (container < 0) {
+            return html;
+        }
+
+        var formEnd = html.lastIndexOf("</div>", container);
+        if (formEnd < 0) {
+            return html;
+        }
+
+        return html.slice(0, formEnd) + countPanel + html.slice(formEnd);
+    }
+
+    function insertGridTab(html) {
+        var container = html.lastIndexOf("</umb-editor-container>");
+        if (container < 0) {
+            return html;
+        }
+
+        var pane = '<div ng-if="vm.activeTab.alias === \'count\'" class="form-vertical">' + countPanel + "</div><block-count-grid-tab></block-count-grid-tab>";
+        return html.slice(0, container) + pane + html.slice(container);
+    }
+
+    function insertValidation(html) {
+        if (html.indexOf("data-block-count-validation") !== -1) {
+            return html;
+        }
+
+        var end = html.lastIndexOf("</div>");
+        if (end < 0) {
+            return html;
+        }
+
+        return html.slice(0, end) + validationMarkup + html.slice(end);
+    }
+
+    function applyValidation(vm, editorAlias) {
+        if (!vm.model) {
+            return;
+        }
+
+        var issues = evaluateBlockCount(vm.model.value, readRules(vm.model.config), namesFrom(vm), editorAlias);
+        vm.blockCountMessages = issues.map(function (issue) { return issue.message; });
+        var control = vm.propertyForm && vm.propertyForm.blockCount;
+        if (control) {
+            control.$setValidity("blockCount", issues.length === 0);
+        }
+    }
+
+    function snapshot(vm) {
+        var value = vm.model && vm.model.value;
+        var blocks = vm.model && vm.model.config && vm.model.config.blocks;
+        return [
+            contentSignature(value),
+            layoutSignature(value && value.layout),
+            blocksSignature(blocks),
+            (vm.availableBlockTypes || []).length,
+            vm.propertyForm && vm.propertyForm.blockCount ? 1 : 0
+        ].join("|");
+    }
+
+    function contentSignature(value) {
+        var entries = value && value.contentData || [];
+        if (!angular.isArray(entries)) {
+            return "";
+        }
+
+        return entries.map(function (entry) {
+            return blockKey(entry && (entry.key || entry.udi)) + "=" + (entry && entry.contentTypeKey || "");
+        }).join(";");
+    }
+
+    function layoutSignature(layout) {
+        if (!layout || typeof layout !== "object") {
+            return "";
+        }
+
+        return Object.keys(layout).map(function (alias) {
+            return alias + ":" + itemsSignature(layout[alias]);
+        }).join("|");
+    }
+
+    function itemsSignature(items) {
+        if (!angular.isArray(items)) {
+            return "";
+        }
+
+        return items.map(function (item) {
+            var areas = item && item.areas;
+            var areaPart = angular.isArray(areas)
+                ? areas.map(function (area) { return itemsSignature(area && area.items); }).join(",")
+                : "";
+            return blockKey(item && (item.contentKey || item.contentUdi)) + "(" + areaPart + ")";
+        }).join(";");
+    }
+
+    function blocksSignature(blocks) {
+        if (!angular.isArray(blocks)) {
+            return "";
+        }
+
+        return blocks.map(function (block) {
+            var count = block && block.blockCount || {};
+            return (block && block.contentElementTypeKey || "") + ":" + count.min + ":" + count.max;
+        }).join(";");
+    }
+
+    function namesFrom(vm) {
+        var names = {};
+        (vm.availableBlockTypes || []).forEach(function (entry) {
+            var config = entry && (entry.blockConfigModel || entry);
+            var element = entry && entry.elementTypeModel;
+            var key = config && config.contentElementTypeKey;
+            var name = element && element.name;
+            if (key && name) {
+                names[normalizeKey(key)] = name;
+            }
+        });
+        return names;
+    }
+
+    function readRules(config) {
+        var blocks = config && config.blocks;
+        if (!angular.isArray(blocks)) {
+            return [];
+        }
+
+        return blocks.filter(function (block) {
+            return block && block.contentElementTypeKey;
+        }).map(function (block) {
+            var count = block.blockCount || {};
+            return {
+                contentElementTypeKey: block.contentElementTypeKey,
+                min: count.min,
+                max: count.max
+            };
+        });
+    }
+
+    function entryLabel(count) {
+        return count === 1 ? "entry" : "entries";
+    }
+
+    function belowMinimumMessage(name, minimum, count) {
+        return name + " requires at least " + minimum + " " + entryLabel(minimum) + ". The current count is " + count + ".";
+    }
+
+    function aboveMaximumMessage(name, maximum, count) {
+        return name + " allows at most " + maximum + " " + entryLabel(maximum) + ". The current count is " + count + ".";
+    }
+
+    function exactMessage(name, expected, count) {
+        return name + " must contain exactly " + expected + " " + entryLabel(expected) + ". The current count is " + count + ".";
+    }
+
+    function minimumAboveMaximumMessage(name) {
+        return "The count configuration for " + name + " is invalid. The minimum must be less than or equal to the maximum.";
+    }
+
+    function negativeMessage(name) {
+        return "The count configuration for " + name + " is invalid. Minimum and maximum must be zero or greater.";
+    }
+
+    function evaluateBlockCount(value, rules, names, editorAlias) {
+        var counts = countLayoutItems(value, editorAlias);
+        var issues = [];
+        var seen = {};
+
+        (rules || []).forEach(function (rule) {
+            var key = normalizeKey(rule.contentElementTypeKey);
+            if (!key || seen[key]) {
+                return;
+            }
+
+            seen[key] = true;
+            var name = (names && (names[key] || names[rule.contentElementTypeKey])) || "Block";
+            var min = normalizeLimit(rule.min);
+            var max = normalizeLimit(rule.max);
+
+            if ((min !== undefined && min < 0) || (max !== undefined && max < 0)) {
+                issues.push(negativeMessage(name));
+                return;
+            }
+
+            if (min !== undefined && max !== undefined && min > max) {
+                issues.push(minimumAboveMaximumMessage(name));
+                return;
+            }
+
+            if (min === undefined && max === undefined) {
+                return;
+            }
+
+            var count = counts[key] || 0;
+            if (min !== undefined && max === min && count !== min) {
+                issues.push(exactMessage(name, min, count));
+                return;
+            }
+
+            if (min !== undefined && count < min) {
+                issues.push(belowMinimumMessage(name, min, count));
+            }
+
+            if (max !== undefined && count > max) {
+                issues.push(aboveMaximumMessage(name, max, count));
+            }
+        });
+
+        return issues.map(function (message) { return { message: message }; });
+    }
+
+    function countLayoutItems(value, editorAlias) {
+        var counts = {};
+        var contentTypes = {};
+        var entries = value && value.contentData || [];
+        if (angular.isArray(entries)) {
+            entries.forEach(function (entry) {
+                var entryKey = blockKey(entry && (entry.key || entry.udi));
+                if (!entry || !entryKey || !entry.contentTypeKey) {
+                    return;
+                }
+
+                contentTypes[entryKey] = normalizeKey(entry.contentTypeKey);
+            });
+        }
+
+        var layout = value && value.layout || {};
+        Object.keys(layout).forEach(function (alias) {
+            var items = layout[alias];
+            if (!angular.isArray(items)) {
+                return;
+            }
+
+            var normalizedAlias = alias.toLowerCase();
+            var includeAreas = normalizedAlias === blockGridEditorAlias.toLowerCase();
+            var isList = normalizedAlias === blockListEditorAlias.toLowerCase();
+            if (!isList && !includeAreas) {
+                return;
+            }
+
+            if (editorAlias && normalizedAlias !== editorAlias.toLowerCase()) {
+                return;
+            }
+
+            walk(items, contentTypes, counts, includeAreas);
+        });
+
+        return counts;
+    }
+
+    function walk(items, contentTypes, counts, includeAreas) {
+        items.forEach(function (item) {
+            var contentKey = blockKey(item && (item.contentKey || item.contentUdi));
+            var contentTypeKey = contentKey ? contentTypes[contentKey] : undefined;
+            if (contentTypeKey) {
+                counts[contentTypeKey] = (counts[contentTypeKey] || 0) + 1;
+            }
+
+            if (!includeAreas || !item || !angular.isArray(item.areas)) {
+                return;
+            }
+
+            item.areas.forEach(function (area) {
+                if (area && angular.isArray(area.items) && area.items.length) {
+                    walk(area.items, contentTypes, counts, includeAreas);
+                }
+            });
+        });
+    }
+
+    function normalizeLimit(value) {
+        return value === null || value === undefined ? undefined : value;
+    }
+
+    function normalizeKey(value) {
+        return value ? String(value).trim().toLowerCase() : "";
+    }
+
+    function blockKey(value) {
+        var text = normalizeKey(value);
+        var marker = "umb://";
+        if (text.indexOf(marker) !== 0) {
+            return text;
+        }
+
+        var separator = text.lastIndexOf("/");
+        return separator >= 0 && separator < text.length - 1 ? text.substring(separator + 1) : "";
+    }
+})();

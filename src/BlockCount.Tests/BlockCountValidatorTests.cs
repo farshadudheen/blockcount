@@ -129,12 +129,12 @@ public class BlockCountValidatorTests
         IReadOnlyDictionary<Guid, IContentType> contentTypes)
     {
         var dataTypeService = new Mock<IDataTypeService>();
-        dataTypeService.Setup(service => service.GetAsync(It.IsAny<Guid>()))
-            .ReturnsAsync((Guid key) => dataTypes.GetValueOrDefault(key));
+        dataTypeService.Setup(service => service.GetDataType(It.IsAny<Guid>()))
+            .Returns((Guid key) => dataTypes.GetValueOrDefault(key));
 
         var contentTypeService = new Mock<IContentTypeService>();
-        contentTypeService.Setup(service => service.GetAsync(It.IsAny<Guid>()))
-            .ReturnsAsync((Guid key) => contentTypes.GetValueOrDefault(key));
+        contentTypeService.Setup(service => service.Get(It.IsAny<Guid>()))
+            .Returns((Guid key) => contentTypes.GetValueOrDefault(key));
 
         return new BlockCountContentValidator(dataTypeService.Object, contentTypeService.Object);
     }
@@ -145,7 +145,7 @@ public class BlockCountValidatorTests
         foreach (var (key, blocks) in items)
         {
             var dataType = new Mock<IDataType>();
-            dataType.SetupGet(item => item.ConfigurationData).Returns(new Dictionary<string, object> { ["blocks"] = blocks });
+            dataType.SetupGet(item => item.Configuration).Returns(new Dictionary<string, object> { ["blocks"] = blocks });
             map[key] = dataType.Object;
         }
 

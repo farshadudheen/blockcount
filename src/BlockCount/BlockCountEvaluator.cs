@@ -131,38 +131,78 @@ public static class BlockCountEvaluator
                     continue;
                 }
 
-                if (BlockCountJson.Property(block, "values") is not JsonArray values)
+                var blockKey = BlockCountJson.ReadString(BlockCountJson.Property(block, "key"))
+                    ?? BlockCountJson.ReadString(BlockCountJson.Property(block, "udi"));
+
+                if (BlockCountJson.Property(block, "values") is JsonArray values)
                 {
+                    foreach (var nested in ReadValueProperties(elementTypeKey, blockKey, values))
+                    {
+                        yield return nested;
+                    }
+
                     continue;
                 }
 
-                var blockKey = BlockCountJson.ReadString(BlockCountJson.Property(block, "key"));
-
-                foreach (var rawProperty in values)
+                foreach (var nested in ReadInlineProperties(elementTypeKey, blockKey, block))
                 {
-                    if (rawProperty is not JsonObject property)
-                    {
-                        continue;
-                    }
-
-                    var alias = BlockCountJson.ReadString(BlockCountJson.Property(property, "alias"));
-                    var editorAlias = BlockCountJson.ReadString(BlockCountJson.Property(property, "editorAlias"));
-                    if (string.IsNullOrWhiteSpace(alias) || string.IsNullOrWhiteSpace(editorAlias) || !BlockEditors.IsSupported(editorAlias))
-                    {
-                        continue;
-                    }
-
-                    yield return new NestedBlockValue(
-                        elementTypeKey,
-                        blockKey,
-                        alias,
-                        editorAlias,
-                        BlockCountJson.ReadString(BlockCountJson.Property(property, "culture")),
-                        BlockCountJson.NormalizeBlockValue(BlockCountJson.Property(property, "value")));
+                    yield return nested;
                 }
             }
         }
     }
+
+    private static IEnumerable<NestedBlockValue> ReadValueProperties(Guid elementTypeKey, string? blockKey, JsonArray values)
+    {
+        foreach (var rawProperty in values)
+        {
+            if (rawProperty is not JsonObject property)
+            {
+                continue;
+            }
+
+            var alias = BlockCountJson.ReadString(BlockCountJson.Property(property, "alias"));
+            var editorAlias = BlockCountJson.ReadString(BlockCountJson.Property(property, "editorAlias"));
+            if (string.IsNullOrWhiteSpace(alias) || string.IsNullOrWhiteSpace(editorAlias) || !BlockEditors.IsSupported(editorAlias))
+            {
+                continue;
+            }
+
+            yield return new NestedBlockValue(
+                elementTypeKey,
+                blockKey,
+                alias,
+                editorAlias,
+                BlockCountJson.ReadString(BlockCountJson.Property(property, "culture")),
+                BlockCountJson.NormalizeBlockValue(BlockCountJson.Property(property, "value")));
+        }
+    }
+
+    private static IEnumerable<NestedBlockValue> ReadInlineProperties(Guid elementTypeKey, string? blockKey, JsonObject block)
+    {
+        foreach (var property in block)
+        {
+            if (IsReservedContentDataKey(property.Key))
+            {
+                continue;
+            }
+
+            var value = BlockCountJson.NormalizeBlockValue(property.Value);
+            if (value is not JsonObject candidate || BlockCountJson.Property(candidate, "layout") is not JsonObject)
+            {
+                continue;
+            }
+
+            yield return new NestedBlockValue(elementTypeKey, blockKey, property.Key, BlockEditors.BlockList, null, value);
+        }
+    }
+
+    private static bool IsReservedContentDataKey(string name) =>
+        name.Equals("key", StringComparison.OrdinalIgnoreCase)
+        || name.Equals("udi", StringComparison.OrdinalIgnoreCase)
+        || name.Equals("contentTypeKey", StringComparison.OrdinalIgnoreCase)
+        || name.Equals("contentTypeAlias", StringComparison.OrdinalIgnoreCase)
+        || name.Equals("values", StringComparison.OrdinalIgnoreCase);
 
     private static JsonArray? FindLayout(JsonObject layout, string editorAlias) =>
         BlockCountJson.Property(layout, editorAlias) as JsonArray;
@@ -182,7 +222,7 @@ public static class BlockCountEvaluator
                 continue;
             }
 
-            if (BlockCountJson.TryGuid(BlockCountJson.Property(block, "key"), out var key)
+            if (TryContentKey(block, out var key)
                 && BlockCountJson.TryGuid(BlockCountJson.Property(block, "contentTypeKey"), out var contentTypeKey))
             {
                 map[key] = contentTypeKey;
@@ -201,7 +241,7 @@ public static class BlockCountEvaluator
                 continue;
             }
 
-            if (BlockCountJson.TryGuid(BlockCountJson.Property(layoutItem, "contentKey"), out var contentKey)
+            if (TryLayoutKey(layoutItem, out var contentKey)
                 && contentTypes.TryGetValue(contentKey, out var contentTypeKey))
             {
                 counts[contentTypeKey] = counts.GetValueOrDefault(contentTypeKey) + 1;
@@ -221,6 +261,14 @@ public static class BlockCountEvaluator
             }
         }
     }
+
+    private static bool TryContentKey(JsonObject block, out Guid key) =>
+        BlockCountJson.TryBlockKey(BlockCountJson.Property(block, "key"), out key)
+        || BlockCountJson.TryBlockKey(BlockCountJson.Property(block, "udi"), out key);
+
+    private static bool TryLayoutKey(JsonObject layoutItem, out Guid key) =>
+        BlockCountJson.TryBlockKey(BlockCountJson.Property(layoutItem, "contentKey"), out key)
+        || BlockCountJson.TryBlockKey(BlockCountJson.Property(layoutItem, "contentUdi"), out key);
 
     private static BlockCountIssue Issue(BlockCountRule rule, string name, BlockCountIssueKind kind, string message) =>
         new()
